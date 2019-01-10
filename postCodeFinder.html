@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+      crossorigin="anonymous">
+
+    <title>Postcode Finder</title>
+
+   <!--  styles -->
+    <style>
+
+      html { 
+          background: url(city.png) no-repeat center center fixed; 
+          -webkit-background-size: cover;
+          -moz-background-size: cover;
+          -o-background-size: cover;
+          background-size: cover;
+          }
+        
+          body {
+              color: lightblue;
+              background: none;
+              
+          }
+
+          small{
+            color: lightblue;
+          }
+
+          .btn{
+           background-color: lightblue;
+          }
+           #map{
+
+              height: 300px;
+               margin: 0, auto;
+              }
+  
+  </style>
+  </head>
+
+  <body>
+
+    <div class="container mb-6">
+      <h1>Postcode Finder</h1>
+
+
+      <div id="message"></div>
+
+      <form>
+        <div class="form-group">
+          <label for="address">Address</label>
+          <input type="text" class="form-control" id="address" aria-describedby="address" placeholder="Enter partial address">
+          <small id="addressHelp" class="form-text ">Enter a partial address to get the post code</small>
+        </div>
+
+        <button class="btn mb-2" id="findPostcode">Find Postcode</button>
+      </form>
+
+      <!-- div for map -->
+      <div id="map"></div>
+
+    </div>
+
+
+
+
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+      crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+      crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+      crossorigin="anonymous"></script>
+
+    <script type="text/javascript">
+
+
+
+        //function for button click
+      $('#findPostcode').click(function (e) {
+
+
+        //prevent form submiting 
+        e.preventDefault();
+
+        //google api key. You will also need to add Your api key to the async script 
+        apiKey = "Your Api Key"
+
+        //address variable
+        var add = "";
+
+        //check if address is left blank when button is clicked
+        if ($("#address").val() == "") {
+          add = "-";
+
+        } else {
+          add = encodeURIComponent($("#address").val());
+        }
+
+
+        //ajax request to google maps api to get address data
+        $.ajax({
+
+
+
+          url: "https://maps.googleapis.com/maps/api/geocode/json?address=" + add + "&key=" + apiKey,
+
+          type: "GET",
+
+          success: function (data) {
+
+            console.log(data);
+
+            //check data 
+            if ((data["status"] == "INVALID_REQUEST") || (data["status"] == "ZERO_RESULTS")) {
+
+              //error message
+              $('#message').html('<div class="alert alert-danger" role="alert"><strong>Postcode Not Found </strong><p>Please try again.</p> </div>');
+
+
+            } else {
+
+              //loop through json data returned from google maps api
+              $.each(data['results'][0]['address_components'], function (key, value) {
+
+                //check for postcode
+                if (value['types'][0] == 'postal_code') {
+
+                  //succes message
+                  $('#message').html('<div class="alert alert-success" role="alert"><strong>Postcode Found </strong><p>The Address ' + decodeURI(add) + '.</p><p> The Postcode is ' + value['long_name'] + '.</p> </div>');
+
+                } else {
+
+                  //error message
+                  $('#message').html('<div class="alert alert-warning" role="alert"><strong>Postcode Not Found  </strong><p>No postcode for this address</p> </div>');
+
+
+                }
+
+
+
+              });
+
+
+            }
+
+
+
+
+
+          }
+
+
+        });
+
+
+      });
+
+      //intialize map 
+      function initMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+          //centred on dublin and map style settings 
+          center: { lat: 53.3501, lng: -6.2661 },
+          zoom: 15,
+          styles: [
+            { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+            { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+            { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
+            {
+              featureType: 'administrative.locality',
+              elementType: 'labels.text.fill',
+              stylers: [{ color: '#d59563' }]
+            },
+            {
+              featureType: 'poi',
+              elementType: 'labels.text.fill',
+              stylers: [{ color: '#d59563' }]
+            },
+            {
+              featureType: 'poi.park',
+              elementType: 'geometry',
+              stylers: [{ color: '#263c3f' }]
+            },
+            {
+              featureType: 'poi.park',
+              elementType: 'labels.text.fill',
+              stylers: [{ color: '#6b9a76' }]
+            },
+            {
+              featureType: 'road',
+              elementType: 'geometry',
+              stylers: [{ color: '#38414e' }]
+            },
+            {
+              featureType: 'road',
+              elementType: 'geometry.stroke',
+              stylers: [{ color: '#212a37' }]
+            },
+            {
+              featureType: 'road',
+              elementType: 'labels.text.fill',
+              stylers: [{ color: '#9ca5b3' }]
+            },
+            {
+              featureType: 'road.highway',
+              elementType: 'geometry',
+              stylers: [{ color: '#746855' }]
+            },
+            {
+              featureType: 'road.highway',
+              elementType: 'geometry.stroke',
+              stylers: [{ color: '#1f2835' }]
+            },
+            {
+              featureType: 'road.highway',
+              elementType: 'labels.text.fill',
+              stylers: [{ color: '#f3d19c' }]
+            },
+            {
+              featureType: 'transit',
+              elementType: 'geometry',
+              stylers: [{ color: '#2f3948' }]
+            },
+            {
+              featureType: 'transit.station',
+              elementType: 'labels.text.fill',
+              stylers: [{ color: '#d59563' }]
+            },
+            {
+              featureType: 'water',
+              elementType: 'geometry',
+              stylers: [{ color: '#17263c' }]
+            },
+            {
+              featureType: 'water',
+              elementType: 'labels.text.fill',
+              stylers: [{ color: '#515c6d' }]
+            },
+            {
+              featureType: 'water',
+              elementType: 'labels.text.stroke',
+              stylers: [{ color: '#17263c' }]
+            }
+          ]
+        });
+
+        
+        var geocoder = new google.maps.Geocoder();
+        //check for button click
+        document.getElementById('findPostcode').addEventListener('click', function () {
+          geocodeAddress(geocoder, map);
+        });
+      }
+      //search address and update map 
+      function geocodeAddress(geocoder, resultsMap) {
+        var address = document.getElementById('address').value;
+        geocoder.geocode({ 'address': address }, function (results, status) {
+          if (status === 'OK') {
+            resultsMap.setCenter(results[0].geometry.location);
+            var marker = new google.maps.Marker({
+              map: resultsMap,
+              position: results[0].geometry.location
+
+
+            });
+          }
+        });
+      }
+
+
+
+
+    </script>
+    
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=Your_API_Key&callback=initMap">
+    </script>
+
+  </body>
+
+</html>
